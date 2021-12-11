@@ -125,6 +125,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "rxjs-visualizer"
+    }
+  },
+  "defaultProject": "rxjs-visualizer",
+  "cli": {
+    "analytics": false
+  }
 }
