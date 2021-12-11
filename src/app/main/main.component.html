@@ -1,0 +1,202 @@
+<div class="main">
+  <div class="container-fluid">
+    <div class="stream-view">
+      <h2>RxJS Stream Visualizer</h2>
+      <div class="stream">
+        <div class="stream-item"
+             *ngFor="let item of streamService.items"
+             [style.background-color]="item.color"
+             (@itemState.done)="log($event, item)"
+             [@itemState]></div>
+      </div>
+    </div>
+    <div class="log">
+      <div class="logger">
+        <ul>
+          <li *ngFor="let log of logService.logs">{{ log }}</li>
+        </ul>
+      </div>
+      <div class="reset">
+        <button class="btn btn-sm btn-warning" (click)="clearLog()">クリア</button>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="form-group">
+        <select name="type" class="form-control" (change)="onSelect($event)">
+          <option *ngFor="let operator of streamService.operators" value="{{ operator }}">{{ operator }}</option>
+        </select>
+      </div>
+      <div class="form-group form-row">
+        <div class="col-10">
+          <input type="text" name="message" [(ngModel)]="message" (keyup)="onKeyup($event)" class="form-control">
+        </div>
+        <div class="col-2">
+          <button class="btn btn-block btn-primary" (click)="onEnter($event)">送信</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="code-block" [ngSwitch]="selectedOperator">
+    <!-- of -->
+    <pre *ngSwitchCase="'of'"><code class="typescript">
+    import {{'{'}} of {{'}'}} from 'rxjs';
+
+    // 何もせずデータを流す
+    of(value);
+    </code></pre>
+
+    <!-- map -->
+    <pre *ngSwitchCase="'map'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map {{'}'}} from 'rxjs/operators';
+
+    // 整形したデータを返す
+    Observable
+      .pipe(
+        map(value => `map: ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- map -->
+    <pre *ngSwitchCase="'filter'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} filter {{'}'}} from 'rxjs/operators';
+
+    // 整形したデータを返す
+    Observable
+      .pipe(
+        filter(value => value === 'test'),
+        map(value => `filter() matched: ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- throttleTime -->
+    <pre *ngSwitchCase="'throttleTime'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map, throttleTime {{'}'}} from 'rxjs/operators';
+
+    // 連続する処理を250ミリ秒間隔で間引く
+    Observable
+      .pipe(
+        throttleTime(250),
+        map(value => `throttleTime(250): ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- debounceTime -->
+    <pre *ngSwitchCase="'debounceTime'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map, debounceTime {{'}'}} from 'rxjs/operators';
+
+    // 連続する最後の処理から250ミリ秒遅延後、
+    // 最後のデータを1度だけストリームに流す
+    Observable
+      .pipe(
+        debounceTime(250),
+        map(value => `debounceTime(250): ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- distinctUntilChanged -->
+    <pre *ngSwitchCase="'distinctUntilChanged'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} distinctUntilChanged, map {{'}'}} from 'rxjs/operators';
+
+    // 前回と値が違う場合のみ、ストリームを流す
+    Observable
+      .pipe(
+        distinctUntilChanged(),
+        map(value => `distinctUntilChanged: ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- merge -->
+    <pre *ngSwitchCase="'merge'"><code class="typescript">
+    import {{'{'}} merge, interval {{'}'}} from 'rxjs';
+    import {{'{'}} map, take {{'}'}} from 'rxjs/operators';
+
+    // 複数のObservableを1本にまとめる
+    merge(
+      interval(1200).pipe(
+        take(4),
+        map((index) => `(a: ${{'{'}}index + 1{{'}'}} / 4)`)  // red
+      ),
+      interval(500).pipe(
+        take(10),
+        map((index) => `(b: ${{'{'}}index + 1{{'}'}} / 10)`) // green
+      )
+    ).pipe(
+      map(value => {{'{'}}
+        if (value.startsWith('(a')) {{'{'}}
+          return {{'{'}} message: `merge: ${{'{'}}value{{'}'}}`, color: 'rgb(226, 149, 126)' {{'}'}};
+        {{'}'}} else if (value.startsWith('(b')) {{'{'}}
+          return {{'{'}} message: `merge: ${{'{'}}value{{'}'}}`, color: 'rgb(126, 226, 134)' {{'}'}};
+        {{'}'}}
+      {{'}'}})
+    );
+    </code></pre>
+
+    <!-- switchMap -->
+    <pre *ngSwitchCase="'switchMap'"><code class="typescript">
+    import {{'{'}} interval, Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map, switchMap, take {{'}'}} from 'rxjs/operators';
+
+    // ストリーム（A）に流れてくるデータを元に、別のストリーム（B）を流す。
+    // 別のストリーム（B）が終わる前に、元のストリーム（A）が流れた場合、
+    // （B）は途中でキャンセル・破棄され、始めから再び実行される
+    Observable
+      .pipe(
+        switchMap(value => {{'{'}}
+          return interval(1000).pipe(
+            take(5),
+            map((index) => `switchMap: ${{'{'}}index{{'}'}} => ${{'{'}}value{{'}'}}`)
+          );
+        {{'}'}});
+      );
+    </code></pre>
+
+    <!-- skip -->
+    <pre *ngSwitchCase="'skip'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map, skip {{'}'}} from 'rxjs/operators';
+
+    // 指定回数分のストリームを流さず、スキップする
+    Observable
+      .pipe(
+        skip(3),
+        map(value => `skip: ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- take -->
+    <pre *ngSwitchCase="'take'"><code class="typescript">
+    import {{'{'}} Observable {{'}'}} from 'rxjs';
+    import {{'{'}} map, take {{'}'}} from 'rxjs/operators';
+
+    // 指定回数分のみストリームを流す
+    let count = 0;
+
+    Observable
+      .pipe(
+        take(3),
+        map(value => `take(${{'{'}}++count{{'}'}}): ${{'{'}}value{{'}'}}`)
+      );
+    </code></pre>
+
+    <!-- finalize -->
+    <pre *ngSwitchCase="'finalize'"><code class="typescript">
+    import {{'{'}} interval {{'}'}} from 'rxjs';
+    import {{'{'}} finalize, take {{'}'}} from 'rxjs/operators';
+
+    // 1秒毎にストリームを流す
+    interval(1000)
+      .pipe(
+        map(index => `finalize(map): ${{'{'}}index + 1{{'}'}}`),
+        take(3),
+        finalize(() => {{'{'}}
+          setTimeout(() => this.add({{'{'}} message: 'finalize!' {{'}'}}), 100);
+        {{'}'}}),
+      );
+    </code></pre>
+  </div>
+</div>

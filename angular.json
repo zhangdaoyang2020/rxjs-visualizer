@@ -28,6 +28,8 @@
               "src/assets"
             ],
             "styles": [
+              "./node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "./node_modules/highlight.js/styles/vs2015.css",
               "src/styles.scss"
             ],
             "scripts": []
